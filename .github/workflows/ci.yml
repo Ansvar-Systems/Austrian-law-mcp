@@ -6,6 +6,7 @@ on:
       - main
       - 'feature/*'
       - 'fix/*'
+      - 'audit/*'
   pull_request:
     branches:
       - main
@@ -39,6 +40,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
 
       - name: Unit and integration tests
         run: npm test

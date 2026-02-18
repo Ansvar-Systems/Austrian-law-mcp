@@ -41,10 +41,11 @@ export function resolveExistingStatuteId(
 
   if (exact) return exact.id;
 
-  // Try LIKE match on title
+  // Try LIKE match on title (escape SQL wildcards in user input)
+  const escaped = inputId.replace(/[%_\\]/g, '\\$&');
   const byTitle = db.prepare(
-    "SELECT id FROM legal_documents WHERE title LIKE ? LIMIT 1"
-  ).get(`%${inputId}%`) as { id: string } | undefined;
+    "SELECT id FROM legal_documents WHERE title LIKE ? ESCAPE '\\' LIMIT 1"
+  ).get(`%${escaped}%`) as { id: string } | undefined;
 
   return byTitle?.id ?? null;
 }

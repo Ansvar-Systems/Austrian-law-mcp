@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema/server.json",
+  "name": "austrian-law-mcp",
+  "description": "Austrian federal legislation (statutes, EU cross-references) via the Model Context Protocol. Sourced from RIS OGD (Bundeskanzleramt).",
+  "version": "1.0.0",
+  "repository": "https://github.com/Ansvar-Systems/Austria-law-mcp",
+  "homepage": "https://github.com/Ansvar-Systems/Austria-law-mcp#readme",
+  "author": {
+    "name": "Ansvar Systems AB",
+    "email": "hello@ansvar.ai",
+    "url": "https://ansvar.ai"
+  },
+  "license": "Apache-2.0",
+  "categories": ["legal", "compliance", "government"],
+  "tags": ["austria", "law", "legislation", "ris-ogd", "eu-cross-references", "german-language"],
+  "installations": {
+    "npm": {
+      "type": "npm",
+      "package_name": "@ansvar/austrian-law-mcp",
+      "command": "npx -y @ansvar/austrian-law-mcp"
+    },
+    "hosted": {
+      "type": "streamable-http",
+      "url": "https://austrian-law-mcp.vercel.app/mcp"
+    }
+  },
+  "tools": [
+    "search_legislation",
+    "get_provision",
+    "validate_citation",
+    "build_legal_stance",
+    "format_citation",
+    "check_currency",
+    "list_sources",
+    "get_eu_basis",
+    "get_austrian_implementations",
+    "search_eu_implementations",
+    "get_provision_eu_basis",
+    "validate_eu_compliance",
+    "about"
+  ]
+}
