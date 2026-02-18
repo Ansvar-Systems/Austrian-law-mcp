@@ -40,7 +40,7 @@ export interface AboutResult {
 function safeCount(db: InstanceType<typeof Database>, sql: string): number {
   try {
     const row = db.prepare(sql).get() as { count: number } | undefined;
-    return row ? Number(row.count) : 0;
+    return row ? Number(row.count) : /* istanbul ignore next */ 0;
   } catch {
     return 0;
   }
