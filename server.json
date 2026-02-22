@@ -7,7 +7,7 @@
     "source": "github"
   },
   "homepage": "https://ansvar.eu",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "Apache-2.0",
   "keywords": [
     "austrian-law",
@@ -22,7 +22,7 @@
     {
       "registryType": "npm",
       "identifier": "@ansvar/austrian-law-mcp",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "transport": {
         "type": "stdio"
       }
@@ -30,7 +30,7 @@
     {
       "registryType": "npm",
       "identifier": "@ansvar/austrian-law-mcp",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "transport": {
         "type": "streamable-http",
         "url": "https://austrian-law-mcp.vercel.app/mcp"
