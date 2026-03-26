@@ -33,7 +33,7 @@
       "version": "1.0.3",
       "transport": {
         "type": "streamable-http",
-        "url": "https://mcp.ansvar.eu/law-austrian-law-mcp/mcp"
+        "url": "https://austrian-law-mcp.vercel.app/mcp"
       }
     }
   ]
