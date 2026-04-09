@@ -26,7 +26,7 @@ jobs:
       errors_found: ${{ steps.check.outputs.errors_found }}
       update_ids: ${{ steps.check.outputs.update_ids }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
@@ -86,7 +86,7 @@ jobs:
       inputs.auto_update == 'true' &&
       needs.check.outputs.updates_found == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
