@@ -139,7 +139,7 @@ jobs:
     if: needs.check.outputs.updates_found == 'true' || needs.check.outputs.errors_found == 'true'
     steps:
       - name: Create freshness issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           UPDATES_FOUND: ${{ needs.check.outputs.updates_found }}
           ERRORS_FOUND: ${{ needs.check.outputs.errors_found }}
