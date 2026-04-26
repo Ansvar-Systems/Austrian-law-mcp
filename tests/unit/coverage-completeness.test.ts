@@ -10,9 +10,8 @@ import Database from '@ansvar/mcp-sqlite';
 
 // --- Utilities ---
 import { normalizeAsOfDate } from '../../src/utils/as-of-date.js';
-import { isValidStatuteId, statuteIdCandidates, resolveExistingStatuteId } from '../../src/utils/statute-id.js';
+import { resolveExistingStatuteId } from '../../src/utils/statute-id.js';
 import { buildProvisionLookupCandidates } from '../../src/utils/provision-candidates.js';
-import { buildFtsQueryVariants, buildSanitizedFallback } from '../../src/utils/fts-query.js';
 import { generateResponseMetadata } from '../../src/utils/metadata.js';
 import { makeAboutContext } from '../../src/utils/about-context.js';
 import { cleanProvisionContent } from '../../src/utils/content-cleaner.js';
@@ -87,33 +86,13 @@ describe('as-of-date', () => {
 });
 
 describe('statute-id', () => {
-  it('isValidStatuteId returns true for non-empty string', () => {
-    expect(isValidStatuteId('gesetz-123')).toBe(true);
-  });
-
-  it('isValidStatuteId returns false for empty string', () => {
-    expect(isValidStatuteId('')).toBe(false);
-  });
-
-  it('isValidStatuteId returns false for whitespace-only', () => {
-    expect(isValidStatuteId('   ')).toBe(false);
-  });
-
-  it('statuteIdCandidates generates dash variants from spaces', () => {
-    const candidates = statuteIdCandidates('data protection act');
-    expect(candidates).toContain('data-protection-act');
-  });
-
-  it('statuteIdCandidates generates space variants from dashes', () => {
-    const candidates = statuteIdCandidates('data-protection-act');
-    expect(candidates).toContain('data protection act');
-  });
-
-  it('statuteIdCandidates preserves original casing', () => {
-    const candidates = statuteIdCandidates('ABGB');
-    expect(candidates).toContain('ABGB');
-    expect(candidates).toContain('abgb');
-  });
+  // The 6 isValidStatuteId / statuteIdCandidates tests previously here were
+  // testing a removed legacy API surface (single-arg signature, dash/space
+  // variant generation). Current src/utils/statute-id.ts exports them as
+  // 2-arg @deprecated shims that return resolveDocumentId results — the
+  // older transformation behaviour no longer exists. Re-introducing it
+  // would add unused legacy logic; the current tests below cover the
+  // canonical resolveDocumentId path under its deprecated alias.
 
   it('resolveExistingStatuteId resolves by exact ID', () => {
     const id = resolveExistingStatuteId(db, 'gesetz-10001622');
@@ -150,35 +129,14 @@ describe('provision-candidates', () => {
   });
 });
 
-describe('fts-query', () => {
-  it('returns primary only for empty tokens after sanitization', () => {
-    const result = buildFtsQueryVariants('!!!');
-    expect(result.primary).toBe('!!!');
-  });
-
-  it('buildSanitizedFallback returns null for empty tokens', () => {
-    expect(buildSanitizedFallback('!!! ### $$$')).toBeNull();
-  });
-
-  it('buildSanitizedFallback returns OR-joined quoted tokens', () => {
-    const result = buildSanitizedFallback('"Datenschutz" AND "Recht"');
-    expect(result).toContain('OR');
-    expect(result).toContain('Datenschutz');
-    expect(result).toContain('Recht');
-  });
-
-  it('handles explicit FTS5 syntax with fallback', () => {
-    const result = buildFtsQueryVariants('"Datenschutz" AND "Recht"');
-    expect(result.primary).toContain('AND');
-    expect(result.fallback).toBeTruthy();
-  });
-
-  it('handles plain multi-word query', () => {
-    const result = buildFtsQueryVariants('Daten Schutz');
-    expect(result.primary).toContain('"Daten"');
-    expect(result.fallback).toContain('OR');
-  });
-});
+// fts-query describe block removed — it tested an older API shape:
+// buildSanitizedFallback() (no longer exists) and buildFtsQueryVariants
+// returning {primary, fallback} (now returns string[]). The current
+// canonical fts-query helpers are exercised end-to-end via
+// search-legislation.test.ts and build-legal-stance.test.ts; a unit
+// test against the new shape can be added when the API stabilises
+// (see arch-docs handover docs/handover/2026-04-26-golden-standard-
+// followups-execution-handover.md for context).
 
 describe('metadata', () => {
   it('returns unknown freshness without db', () => {

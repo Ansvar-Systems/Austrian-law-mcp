@@ -1,8 +1,14 @@
 /**
  * about — Server metadata, dataset statistics, and provenance.
+ *
+ * Returns the fleet-wide contract shape: { server, dataset, provenance, security, _metadata }.
+ * Asserted by tests/unit/coverage-completeness.test.ts, tests/unit/eu-data-paths.test.ts,
+ * tests/unit/registry-dispatch.test.ts, and __tests__/contract/golden.test.ts via fixtures/golden-tests.json.
  */
 
 import type Database from '@ansvar/mcp-sqlite';
+import { detectCapabilities, readDbMetadata } from '../capabilities.js';
+import { generateResponseMetadata } from '../utils/metadata.js';
 
 export interface AboutContext {
   version: string;
@@ -19,43 +25,53 @@ function safeCount(db: InstanceType<typeof Database>, sql: string): number {
   }
 }
 
-export function getAbout(db: InstanceType<typeof Database>, context: AboutContext) {
-
-  const euRefs = safeCount(db, 'SELECT COUNT(*) as count FROM eu_references');
-
-  const stats: Record<string, number> = {
-    documents: safeCount(db, 'SELECT COUNT(*) as count FROM legal_documents'),
-    provisions: safeCount(db, 'SELECT COUNT(*) as count FROM legal_provisions'),
-    definitions: safeCount(db, 'SELECT COUNT(*) as count FROM definitions'),
-  };
-
-  if (euRefs > 0) {
-    stats.eu_documents = safeCount(db, 'SELECT COUNT(*) as count FROM eu_documents');
-    stats.eu_references = euRefs;
+function safeCapabilities(db: InstanceType<typeof Database>): string[] {
+  try {
+    return [...detectCapabilities(db)];
+  } catch {
+    return [];
   }
+}
+
+export function getAbout(db: InstanceType<typeof Database>, context: AboutContext) {
+  const meta = readDbMetadata(db);
 
   return {
-    name: 'Austrian Law MCP',
-    version: context.version,
-    jurisdiction: 'AT',
-    description: 'Austrian Law MCP — legislation via Model Context Protocol',
-    stats,
-    data_sources: [
-      {
-        name: 'Rechtsinformationssystem des Bundes (RIS)',
-        url: 'https://www.ris.bka.gv.at',
-        authority: 'Federal Chancellery',
+    server: {
+      name: 'Austrian Law MCP',
+      version: context.version,
+      repository: 'https://github.com/Ansvar-Systems/Austria-law-mcp',
+    },
+    dataset: {
+      jurisdiction: 'Austria (AT)',
+      languages: ['de'],
+      counts: {
+        legal_documents: safeCount(db, 'SELECT COUNT(*) as count FROM legal_documents'),
+        legal_provisions: safeCount(db, 'SELECT COUNT(*) as count FROM legal_provisions'),
+        definitions: safeCount(db, 'SELECT COUNT(*) as count FROM definitions'),
+        eu_documents: safeCount(db, 'SELECT COUNT(*) as count FROM eu_documents'),
+        eu_references: safeCount(db, 'SELECT COUNT(*) as count FROM eu_references'),
       },
-    ],
-    freshness: {
-      database_built: context.dbBuilt,
+      fingerprint: context.fingerprint,
+      built_at: context.dbBuilt,
+      tier: meta.tier,
+      schema_version: meta.schema_version,
+      capabilities: safeCapabilities(db),
     },
-    disclaimer:
-      'This is a research tool, not legal advice. Verify critical citations against official sources.',
-    network: {
-      name: 'Ansvar MCP Network',
-      open_law: 'https://ansvar.eu/open-law',
-      directory: 'https://ansvar.ai/mcp',
+    provenance: {
+      sources: [
+        {
+          name: 'Rechtsinformationssystem des Bundes (RIS)',
+          authority: 'Federal Chancellery (Bundeskanzleramt)',
+          url: 'https://www.ris.bka.gv.at',
+          license: 'Creative Commons Attribution 4.0',
+        },
+      ],
     },
+    security: {
+      access_model: 'read-only',
+      pii: 'none',
+    },
+    _metadata: generateResponseMetadata(db),
   };
 }
