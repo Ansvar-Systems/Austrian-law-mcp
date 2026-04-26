@@ -5,7 +5,6 @@
 import type { Database } from '@ansvar/mcp-sqlite';
 import { resolveExistingStatuteId } from '../utils/statute-id.js';
 import { generateResponseMetadata, type ToolResponse } from '../utils/metadata.js';
-import { buildProvisionCitation } from '../utils/citation.js';
 import { buildProvisionLookupCandidates } from '../utils/provision-candidates.js';
 import { cleanProvisionContent } from '../utils/content-cleaner.js';
 
