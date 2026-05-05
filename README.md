@@ -1,440 +1,158 @@
-# Austrian Law MCP Server
+# Austrian Law MCP
 
-**The RIS (Rechtsinformationssystem) alternative for the AI age.**
+MCP server for Austrian Law — 5,101 statutes from www.ris.bka.gv.at
 
-[![npm version](https://badge.fury.io/js/@ansvar%2Faustrian-law-mcp.svg)](https://www.npmjs.com/package/@ansvar/austrian-law-mcp)
-[![MCP Registry](https://img.shields.io/badge/MCP-Registry-blue)](https://registry.modelcontextprotocol.io)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![GitHub stars](https://img.shields.io/github/stars/Ansvar-Systems/Austria-law-mcp?style=social)](https://github.com/Ansvar-Systems/Austria-law-mcp)
-[![CI](https://github.com/Ansvar-Systems/Austria-law-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Ansvar-Systems/Austria-law-mcp/actions/workflows/ci.yml)
-[![Daily Data Check](https://github.com/Ansvar-Systems/Austria-law-mcp/actions/workflows/check-updates.yml/badge.svg)](https://github.com/Ansvar-Systems/Austria-law-mcp/actions/workflows/check-updates.yml)
-[![Database](https://img.shields.io/badge/database-pre--built-green)](docs/EU_INTEGRATION_GUIDE.md)
-[![Provisions](https://img.shields.io/badge/provisions-56%2C760-blue)](docs/EU_INTEGRATION_GUIDE.md)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![MCP](https://img.shields.io/badge/MCP-spec--compliant-green.svg)](https://modelcontextprotocol.io)
+[![Jurisdiction](https://img.shields.io/badge/Jurisdiction-AT-informational.svg)](#coverage)
 
-Query **5,101 Austrian statutes** -- from Datenschutzgesetz and Strafgesetzbuch to Allgemeines bürgerliches Gesetzbuch, Arbeitsverfassungsgesetz, and more -- directly from Claude, Cursor, or any MCP-compatible client.
+## What this is
 
-If you're building legal tech, compliance tools, or doing Austrian legal research, this is your verified reference database.
+This server indexes the legal materials listed under **Sources** below and
+exposes them via the Model Context Protocol. Part of the Ansvar MCP fleet —
+source-available servers published for self-hosting.
 
-Built by [Ansvar Systems](https://ansvar.eu) -- Stockholm, Sweden
+It makes no outbound network calls except to the upstream sources during
+ingestion — no analytics, no phone-home.
 
----
+## Coverage
 
-## Why This Exists
+- **Corpus:** Austrian Law — 5,101 statutes, 56,760 provisions
+- **Jurisdiction code:** `AT`
 
-Austrian legal research means navigating the RIS (Rechtsinformationssystem des Bundes), juggling Bundesgesetze, Landesgesetze, and RIS-Suchabfragen. Whether you're:
+The corpus is rebuilt from the upstream sources by the included ingestion script; re-run periodically to refresh.
 
-- A **lawyer** validating citations in a brief or contract
-- A **compliance officer** checking DSGVO obligations or Arbeitsverfassungsgesetz requirements
-- A **legal tech developer** building tools on Austrian law
-- A **researcher** tracing legislative history from Regierungsvorlage to enacted statute
+See **Sources** below for source URLs, terms, and reuse conditions.
 
-...you shouldn't need dozens of browser tabs and manual PDF cross-referencing. Ask Claude. Get the exact provision. With context.
+## Why this exists
 
-This MCP server makes Austrian law **searchable, cross-referenceable, and AI-readable**.
+LLMs answering compliance, security, or legal questions from training data
+alone will fabricate citations — confidently producing article numbers,
+statute names, and source URLs that do not exist, or that do not say what
+the model claims. This MCP exists so an agent can call a tool that returns
+the real text, the real identifier, and the real source URL straight from
+the indexed materials — and ground an answer rather than recall it.
 
----
+One MCP, one corpus. The point is composition.
 
-## Quick Start
+The **Ansvar Gateway** ([ansvar.eu](https://ansvar.eu)) joins this MCP
+with the rest of the Ansvar fleet behind a single authenticated
+endpoint — 300+ servers covering legal jurisdictions, EU
+regulations, security frameworks, sector regulators, privacy-pattern
+catalogues, and risk-scoring tools. That lets an agent run cross-domain
+workflows that no single MCP can serve alone:
 
-### Use Remotely (No Install Needed)
+- **Threat model and TARA.** Threat enumeration → known component
+  vulnerabilities → severity scoring → applicable AI, cybersecurity, and
+  automotive obligations → privacy threats. Every finding traceable to
+  its source.
+- **Gap analysis.** Target framework requirements → current-state
+  evidence → unmet obligations → remediation guidance and authority
+  opinions. Every gap traceable to the specific requirement that flagged
+  it.
+- **Data Protection Impact Assessment.** Privacy regulation articles →
+  national DPA guidance → privacy-pattern catalogue → applicable case
+  law.
 
-> Connect directly to the hosted version -- zero dependencies, nothing to install.
+### Getting high-quality citations
 
-**Endpoint:** `https://mcp.ansvar.eu/law-at/mcp`
+Citation accuracy degrades when an agent's context fills up. Long inputs
+cause retrieval-stage drift — the model recalls claim text correctly but
+misattributes the source. Two practices keep accuracy high:
 
-| Client | How to Connect |
-|--------|---------------|
-| **Claude.ai** | Settings > Connectors > Add Integration > paste URL |
-| **Claude Code** | `claude mcp add austrian-law --transport http https://mcp.ansvar.eu/law-at/mcp` |
-| **Claude Desktop** | Add to config (see below) |
-| **GitHub Copilot** | Add to VS Code settings (see below) |
+1. **Focused first pass, checking-agent second pass.** Query a small,
+   relevant set of MCPs first, then run a separate agent whose only job
+   is to re-resolve each citation against the source MCP and flag any
+   that no longer match. The checking agent uses the same MCP tools as
+   the synthesis agent.
+2. **Pull the source text verbatim when in doubt.** Every citation an
+   agent emits points back to a tool call against this server. You — or
+   another agent — can call the same tool with the same identifier and
+   read the raw statute, article, or standard text directly. If the
+   verbatim text doesn't support what the agent claimed, the citation
+   was misused, regardless of whether the identifier was real.
 
-**Claude Desktop** -- add to `claude_desktop_config.json`:
+Both patterns work the same way self-hosted or through the gateway.
 
-```json
-{
-  "mcpServers": {
-    "austrian-law": {
-      "type": "url",
-      "url": "https://mcp.ansvar.eu/law-at/mcp"
-    }
-  }
-}
-```
+## Two ways to use it
 
-**GitHub Copilot** -- add to VS Code `settings.json`:
+**Self-host (free, Apache 2.0)** — clone this repo, run the ingestion script to build your local database from the listed upstream sources, point your MCP client at the local server. Instructions below.
 
-```json
-{
-  "github.copilot.chat.mcp.servers": {
-    "austrian-law": {
-      "type": "http",
-      "url": "https://mcp.ansvar.eu/law-at/mcp"
-    }
-  }
-}
-```
+**Use the hosted gateway** — for production use against the curated,
+kept-fresh corpus across the full Ansvar MCP fleet, with citation enrichment
+and multi-jurisdiction fan-out — see [ansvar.eu](https://ansvar.eu).
 
-### Use Locally (npm)
+## Self-hosting
+
+### Install
+
+> Requires Node 18+.
 
 ```bash
-npx @ansvar/austrian-law-mcp
-```
-
-**Claude Desktop** -- add to `claude_desktop_config.json`:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "austrian-law": {
-      "command": "npx",
-      "args": ["-y", "@ansvar/austrian-law-mcp"]
-    }
-  }
-}
-```
-
-**Cursor / VS Code:**
-
-```json
-{
-  "mcp.servers": {
-    "austrian-law": {
-      "command": "npx",
-      "args": ["-y", "@ansvar/austrian-law-mcp"]
-    }
-  }
-}
-```
-
-## Example Queries
-
-Once connected, just ask naturally -- in German or English:
-
-- *"Was sagt das Datenschutzgesetz (DSG 2018) § 4 über Einwilligung?"*
-- *"Ist das Arbeitsverfassungsgesetz (ArbVG) noch in Kraft?"*
-- *"Suche nach Bestimmungen über Datenschutz im österreichischen Recht"*
-- *"Welche EU-Richtlinien setzt das DSG 2018 um?"*
-- *"Finde die Strafbestimmungen im Strafgesetzbuch (StGB) zu Computerbetrug"*
-- *"Was regelt das ABGB (Allgemeines bürgerliches Gesetzbuch) über Vertragsabschluss?"*
-- *"Suche nach Arbeitnehmerschutzvorschriften im ArbVG"*
-- *"Which Austrian laws implement the GDPR?"*
-- *"Compare NIS2 implementation requirements across Austrian statutes"*
-
----
-
-## What's Included
-
-| Category | Count | Details |
-|----------|-------|---------|
-| **Statutes** | 5,101 statutes | Comprehensive Austrian federal legislation |
-| **Provisions** | 56,760 sections | Full-text searchable with FTS5 |
-| **Preparatory Works** | 2,674 documents | Regierungsvorlagen and parliamentary materials (Premium) |
-| **Case Law** | 230,201 decisions | OGH, VfGH, VwGH (Premium tier) |
-| **Database Size** | ~1.5 GB | Optimized SQLite, portable |
-| **Daily Updates** | Automated | Freshness checks against RIS |
-
-**Verified data only** -- every citation is validated against official sources (ris.bka.gv.at). Zero LLM-generated content.
-
----
-
-## See It In Action
-
-### Why This Works
-
-**Verbatim Source Text (No LLM Processing):**
-- All statute text is ingested from RIS (Rechtsinformationssystem des Bundes) official sources
-- Provisions are returned **unchanged** from SQLite FTS5 database rows
-- Zero LLM summarization or paraphrasing -- the database contains regulation text, not AI interpretations
-
-**Smart Context Management:**
-- Search returns ranked provisions with BM25 scoring (safe for context)
-- Provision retrieval gives exact text by BGBl number + paragraph/section
-- Cross-references help navigate without loading everything at once
-
-**Technical Architecture:**
-```
-RIS OGD API → Parse → SQLite → FTS5 snippet() → MCP response
-                ↑                      ↑
-         Provision parser       Verbatim database query
-```
-
-### Traditional Research vs. This MCP
-
-| Traditional Approach | This MCP Server |
-|---------------------|-----------------|
-| Search RIS by Gesetzestitel | Search by plain German: *"Datenschutz Einwilligung"* |
-| Navigate multi-paragraph statutes manually | Get the exact provision with context |
-| Manual cross-referencing between laws | `build_legal_stance` aggregates across sources |
-| "Ist dieses Gesetz noch in Kraft?" → manual check | `check_currency` tool → answer in seconds |
-| Find EU basis → dig through EUR-Lex | `get_eu_basis` → linked EU directives instantly |
-| Check RIS for updates | Daily automated freshness checks |
-| No API, no integration | MCP protocol → AI-native |
-
-**Traditional:** Search RIS → Download PDF → Ctrl+F → Cross-reference with Regierungsvorlage → Check EUR-Lex → Repeat
-
-**This MCP:** *"Welche EU-Richtlinie liegt dem DSG 2018 § 4 zur Einwilligung zugrunde?"* → Done.
-
----
-
-## Available Tools (13)
-
-### Core Legal Research Tools (8)
-
-| Tool | Description |
-|------|-------------|
-| `search_legislation` | FTS5 search on 56,760 provisions with BM25 ranking |
-| `get_provision` | Retrieve specific provision by BGBl number + paragraph/section |
-| `validate_citation` | Validate citation against database (zero-hallucination check) |
-| `build_legal_stance` | Aggregate citations from statutes, case law, preparatory works |
-| `format_citation` | Format citations per Austrian conventions (full/short/pinpoint) |
-| `check_currency` | Check if statute is in force, amended, or repealed |
-| `list_sources` | List all available statutes with metadata and data provenance |
-| `about` | Server info, capabilities, dataset statistics, and coverage summary |
-
-### EU Law Integration Tools (5)
-
-| Tool | Description |
-|------|-------------|
-| `get_eu_basis` | Get EU directives/regulations for Austrian statute |
-| `get_austrian_implementations` | Find Austrian laws implementing EU act |
-| `search_eu_implementations` | Search EU documents with Austrian implementation counts |
-| `get_provision_eu_basis` | Get EU law references for specific provision |
-| `validate_eu_compliance` | Check implementation status (requires EU MCP) |
-
----
-
-## EU Law Integration
-
-Austria is an EU member state. Austrian law is heavily shaped by EU directives and regulations, particularly in data protection, financial services, consumer protection, and environmental law.
-
-| Metric | Value |
-|--------|-------|
-| **EU Member Since** | 1995 |
-| **GDPR Implementation** | DSG 2018 (Datenschutzgesetz) |
-| **NIS2 Implementation** | NISG 2024 (Netz- und Informationssystemsicherheitsgesetz) |
-| **Authority** | Datenschutzbehörde (DSB) |
-| **EUR-Lex Integration** | Automated metadata fetching |
-
-### Key Austrian EU Implementations
-
-- **GDPR** (2016/679) → Datenschutzgesetz 2018 (DSG 2018)
-- **NIS2 Directive** (2022/2555) → NISG 2024
-- **AI Act** (2024/1689) → Austrian implementation in progress
-- **eIDAS** (910/2014) → E-Government-Gesetz, Signaturgesetz
-- **AML Directive** (2015/849) → Finanzmarkt-Geldwäschegesetz (FM-GwG)
-- **Consumer Rights Directive** (2011/83) → Konsumentenschutzgesetz (KSchG)
-
-See [EU_INTEGRATION_GUIDE.md](docs/EU_INTEGRATION_GUIDE.md) for detailed documentation.
-
----
-
-## Data Sources & Freshness
-
-All content is sourced from authoritative Austrian legal databases:
-
-- **[RIS - Rechtsinformationssystem des Bundes](https://www.ris.bka.gv.at/)** -- Official federal law database, Bundeskanzleramt
-- **[EUR-Lex](https://eur-lex.europa.eu/)** -- Official EU law database (metadata only)
-
-### Data Provenance
-
-| Field | Value |
-|-------|-------|
-| **Authority** | Bundeskanzleramt Österreich |
-| **Retrieval method** | RIS OGD API |
-| **Language** | German |
-| **License** | RIS data (public domain, Austria) |
-| **Coverage** | 5,101 federal statutes |
-| **Last ingested** | 2026-02-25 |
-
-### Automated Freshness Checks (Daily)
-
-A [daily GitHub Actions workflow](.github/workflows/check-updates.yml) monitors all data sources:
-
-| Source | Check | Method |
-|--------|-------|--------|
-| **Statute amendments** | RIS API date comparison | All 5,101 statutes checked |
-| **New statutes** | RIS Bundesgesetzblatt feed | Diffed against database |
-| **EU reference staleness** | Git commit timestamps | Flagged if >90 days old |
-
----
-
-## Security
-
-This project uses multiple layers of automated security scanning:
-
-| Scanner | What It Does | Schedule |
-|---------|-------------|----------|
-| **CodeQL** | Static analysis for security vulnerabilities | Weekly + PRs |
-| **Semgrep** | SAST scanning (OWASP top 10, secrets, TypeScript) | Every push |
-| **Gitleaks** | Secret detection across git history | Every push |
-| **Trivy** | CVE scanning on filesystem and npm dependencies | Daily |
-| **Docker Security** | Container image scanning + SBOM generation | Daily |
-| **Socket.dev** | Supply chain attack detection | PRs |
-| **OSSF Scorecard** | OpenSSF best practices scoring | Weekly |
-| **Dependabot** | Automated dependency updates | Weekly |
-
-See [SECURITY.md](SECURITY.md) for the full policy and vulnerability reporting.
-
----
-
-## Important Disclaimers
-
-### Legal Advice
-
-> **THIS TOOL IS NOT LEGAL ADVICE**
->
-> Statute text is sourced from official RIS publications. However:
-> - This is a **research tool**, not a substitute for professional legal counsel
-> - **Court case coverage** is available in Premium tier only -- do not rely solely on this for case law research in the free tier
-> - **Verify critical citations** against primary sources (ris.bka.gv.at) for court filings
-> - **EU cross-references** are extracted from Austrian statute text, not EUR-Lex full text
-
-**Before using professionally, read:** [DISCLAIMER.md](DISCLAIMER.md) | [PRIVACY.md](PRIVACY.md)
-
-### Client Confidentiality
-
-Queries go through the Claude API. For privileged or confidential matters, use on-premise deployment. See [PRIVACY.md](PRIVACY.md) for Österreichischer Rechtsanwaltskammertag (ÖRAK) compliance guidance.
-
----
-
-## Documentation
-
-- **[EU Integration Guide](docs/EU_INTEGRATION_GUIDE.md)** -- Detailed EU cross-reference documentation
-- **[EU Usage Examples](docs/EU_USAGE_EXAMPLES.md)** -- Practical EU lookup examples
-- **[Security Policy](SECURITY.md)** -- Vulnerability reporting and scanning details
-- **[Disclaimer](DISCLAIMER.md)** -- Legal disclaimers and professional use notices
-- **[Privacy](PRIVACY.md)** -- Client confidentiality and data handling
-
----
-
-## Development
-
-### Setup
-
-```bash
-git clone https://github.com/Ansvar-Systems/Austria-law-mcp
-cd Austria-law-mcp
+git clone https://github.com/Ansvar-Systems/Austrian-law-mcp.git
+cd Austrian-law-mcp
 npm install
+```
+
+### Build
+
+```bash
 npm run build
-npm test
 ```
 
-### Running Locally
+### Build the database
 
 ```bash
-npm run dev                                       # Start MCP server
-npx @anthropic/mcp-inspector node dist/index.js   # Test with MCP Inspector
+npm run ingest && npm run build:db
 ```
 
-### Data Management
+The database lands at `./data/database.db`.
 
-```bash
-npm run ingest                     # Ingest statutes from RIS
-npm run build:db                   # Rebuild SQLite database
-npm run drift:detect               # Run drift detection
-npm run check-updates              # Check for amendments and new statutes
-npm run db:update-seed             # Update database from seed data
-```
+Ingestion fetches from the upstream source(s) listed under **Sources** below and builds a local SQLite database. Re-run periodically to refresh. Review the source's published terms before running ingestion in a commercial deployment, and inspect the ingestion script in this repo for the actual access method (open API, bulk download, HTML scrape, or feed).
 
-### Performance
+Ingestion is a snapshot — your local copy goes stale until you re-run it. The hosted gateway corpus is refreshed continuously.
 
-- **Search Speed:** <100ms for most FTS5 queries
-- **Database Size:** ~1.5 GB (comprehensive corpus)
-- **Reliability:** 100% ingestion success rate
+### Configure your MCP client
 
----
-
-## Related Projects: Complete Compliance Suite
-
-This server is part of **Ansvar's Compliance Suite** -- MCP servers that work together for end-to-end compliance coverage:
-
-### [@ansvar/eu-regulations-mcp](https://github.com/Ansvar-Systems/EU_compliance_MCP)
-**Query 49 EU regulations directly from Claude** -- GDPR, AI Act, DORA, NIS2, MiFID II, eIDAS, and more. Full regulatory text with article-level search. `npx @ansvar/eu-regulations-mcp`
-
-### @ansvar/austrian-law-mcp (This Project)
-**Query 5,101 Austrian statutes directly from Claude** -- DSG 2018, StGB, ABGB, ArbVG, and more. Full provision text with EU cross-references. `npx @ansvar/austrian-law-mcp`
-
-### [@ansvar/german-law-mcp](https://github.com/Ansvar-Systems/german-law-mcp)
-**Query German federal statutes** -- BDSG, StGB, BGB, and more. `npx @ansvar/german-law-mcp`
-
-### [@ansvar/security-controls-mcp](https://github.com/Ansvar-Systems/security-controls-mcp)
-**Query 261 security frameworks** -- ISO 27001, NIST CSF, SOC 2, CIS Controls, SCF, and more. `npx @ansvar/security-controls-mcp`
-
-### [@ansvar/sanctions-mcp](https://github.com/Ansvar-Systems/Sanctions-MCP)
-**Offline-capable sanctions screening** -- OFAC, EU, UN sanctions lists. `pip install ansvar-sanctions-mcp`
-
-**70+ national law MCPs** covering Belgium, Denmark, Finland, France, Germany, Ireland, Italy, Netherlands, Norway, Poland, Portugal, Slovenia, Spain, Sweden, Switzerland, UK, and more.
-
----
-
-## Contributing
-
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-Priority areas:
-- EU regulation cross-reference expansion
-- Historical statute versions and amendment tracking
-- English translations for key statutes
-- Lower court decision coverage
-
----
-
-## Roadmap
-
-- [x] Core statute database with FTS5 search
-- [x] Full corpus ingestion (5,101 statutes, 56,760 provisions)
-- [x] EU law integration tools
-- [x] Vercel Streamable HTTP deployment
-- [x] npm package publication
-- [x] Daily freshness checks against RIS
-- [ ] Court case law expansion (Premium tier)
-- [ ] Historical statute versions (amendment tracking)
-- [ ] English translations for key statutes
-- [ ] Landesrecht coverage (provincial law)
-
----
-
-## Citation
-
-If you use this MCP server in academic research:
-
-```bibtex
-@software{austrian_law_mcp_2026,
-  author = {Ansvar Systems AB},
-  title = {Austrian Law MCP Server: Production-Grade Legal Research Tool},
-  year = {2026},
-  url = {https://github.com/Ansvar-Systems/Austria-law-mcp},
-  note = {5,101 Austrian statutes with 56,760 provisions and EU law cross-references}
+```json
+{
+  "mcpServers": {
+    "austrian-law-mcp": {
+      "command": "node",
+      "args": ["dist/index.js"]
+    }
+  }
 }
 ```
 
----
+## Sources
+
+| Source | Source URL | Terms / license URL | License basis | Attribution required | Commercial use | Redistribution / caching | Notes |
+|---|---|---|---|---|---|---|---|
+| [RIS OGD](https://www.ris.bka.gv.at) | https://www.ris.bka.gv.at | [Terms](https://creativecommons.org/licenses/by/4.0/) | CC BY 4.0 | Yes | Yes | Yes | Austria's Rechtsinformationssystem des Bundes (RIS) publishes its Open Government Data feeds under CC BY 4.0; the OGD dataset on data.gv.at is currently `ris2_6`. Attribution to RIS / Bundeskanzleramt Österreich is required. |
+
+## What this repository does not provide
+
+This repository's source — the MCP server code, schema, and ingestion script — is licensed under Apache
+2.0. The license below covers the code in this repository only; it does not
+extend to the upstream legal materials. Pre-built database snapshots present under `data/` (e.g. `database.db`), where shipped, are a convenience only. Their presence does not change the legal positioning above — running ingestion is still the canonical way to build a fresh corpus from upstream sources.
+
+Running ingestion may download, cache, transform, and index materials from the listed upstream sources. You are responsible for confirming that your use of those materials complies with the source terms, attribution requirements, robots/rate limits, database rights, copyright rules, and any commercial-use or redistribution limits that apply in your jurisdiction.
 
 ## License
 
-Apache License 2.0. See [LICENSE](./LICENSE) for details.
+Apache 2.0 — see [LICENSE](LICENSE). Commercial use, modification, and
+redistribution of **the source code in this repository** are permitted under
+that license. The license does not extend to upstream legal materials downloaded by the ingestion script; those remain governed by the source jurisdictions' own publishing terms (see Sources above).
 
-### Data Licenses
+## The Ansvar gateway
 
-- **Statutes & Legislation:** Bundeskanzleramt Österreich (public domain, RIS OGD)
-- **EU Metadata:** EUR-Lex (EU public domain)
-
----
-
-## About Ansvar Systems
-
-We build AI-accelerated compliance and legal research tools for the European market. This MCP server started as our internal reference tool for Austrian law -- turns out everyone building for the DACH market has the same research frustrations.
-
-So we're open-sourcing it. Navigating 5,101 statutes in the RIS shouldn't require a Rechtswissenschaftsstudium.
-
-**[ansvar.eu](https://ansvar.eu)** -- Stockholm, Sweden
+If you'd rather not self-host, [ansvar.eu](https://ansvar.eu) provides this
+MCP plus the full Ansvar fleet through a single authenticated endpoint, with
+the curated production corpus, multi-MCP query orchestration, and citation
+enrichment.
 
 ---
 
-<p align="center">
-  <sub>Built with care in Stockholm, Sweden</sub>
-</p>
+Issues: [github.com/Ansvar-Systems/Austrian-law-mcp/issues](https://github.com/Ansvar-Systems/Austrian-law-mcp/issues) · Security: <security@ansvar.eu>
+

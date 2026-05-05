@@ -2,15 +2,14 @@
   "name": "@ansvar/austrian-law-mcp",
   "mcpName": "eu.ansvar/austrian-law-mcp",
   "version": "1.0.3",
-  "description": "Austrian Law MCP — German legislation via Model Context Protocol",
+  "description": "Austrian Law MCP \u2014 German legislation via Model Context Protocol",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "austria-law-mcp": "dist/index.js"
   },
   "files": [
-    "dist",
-    "data/database.db"
+    "dist"
   ],
   "scripts": {
     "build": "tsc",
