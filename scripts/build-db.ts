@@ -218,6 +218,23 @@ function dedupeProvisions(provisions: ProvisionSeed[]): { deduped: ProvisionSeed
 function buildDatabase(): void {
   console.log('Building Austrian Law MCP database...\n');
 
+  // No seeds → don't touch the DB. Production DBs ship via
+  // `scripts/download-db.sh` (GitHub Release asset, not git); the seed-based
+  // build path is only for local dev where a developer has populated
+  // `data/seed/`. Without this guard, CI's "Build database" step would
+  // either:
+  //   (a) destroy the production DB and replace it with an empty one, or
+  //   (b) on a fresh CI runner with no DB yet, create an empty placeholder
+  //       that then fools the pretest hook into skipping download-db.sh.
+  // Either way tests run against an empty schema and fail. The pretest hook
+  // (added by PR #129) handles DB acquisition via download-db.sh, so just
+  // bail out here.
+  if (!fs.existsSync(SEED_DIR)) {
+    console.log(`No seed directory at ${SEED_DIR}; skipping build:db.`);
+    console.log(`(This MCP ships its DB via scripts/download-db.sh — pretest will fetch.)`);
+    return;
+  }
+
   if (fs.existsSync(DB_PATH)) {
     fs.unlinkSync(DB_PATH);
   }
