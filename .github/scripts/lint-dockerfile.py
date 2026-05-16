@@ -37,11 +37,17 @@ _NATIVE_DEPS: tuple[str, ...] = ("better-sqlite3",)
 
 
 def _detect_native_dep(repo_root: Path) -> str:
-    """Return the native dep name found in package.json, or '' if none.
+    """Return the native dep name found in runtime `dependencies`, or '' if none.
 
-    Walks both `dependencies` and `devDependencies`. A repo without a
-    package.json sibling to the Dockerfile is treated as non-Node and
-    the gate skips.
+    Checks ONLY `dependencies` (runtime), not `devDependencies`. A native dep
+    that appears only in devDependencies is build-time only and is excluded
+    from the runtime image by `npm ci --omit=dev` — it doesn't need to be
+    rebuilt/copied to the runtime stage. Common case: MCPs that ship a
+    pre-built DB and use `better-sqlite3` only in `scripts/build-db.ts` for
+    local dev seed builds.
+
+    A repo without a package.json sibling to the Dockerfile is treated as
+    non-Node and the gate skips.
     """
     pkg_path = repo_root / "package.json"
     if not pkg_path.is_file():
@@ -50,10 +56,7 @@ def _detect_native_dep(repo_root: Path) -> str:
         manifest = json.loads(pkg_path.read_text())
     except (json.JSONDecodeError, OSError):
         return ""
-    deps = {
-        **(manifest.get("dependencies") or {}),
-        **(manifest.get("devDependencies") or {}),
-    }
+    deps = manifest.get("dependencies") or {}
     for name in _NATIVE_DEPS:
         if name in deps:
             return name
