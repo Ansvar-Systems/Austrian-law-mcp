@@ -1,3 +1,11 @@
+# sources.yml — Data provenance metadata
+# License axis: AT-Statutory-PD (Austrian statutory public domain)
+# Statutory basis: UrhG §7(1) "Freie Werke" — Gesetze, Verordnungen, amtliche
+# Erlässe, Bekanntmachungen, and Entscheidungen are excluded from copyright
+# protection. Verified verbatim 2026-05-17 via RIS consolidated text.
+# Cross-ref: docs/audits/2026-05-17-eu-copyright-statutory-works-batch-1a-AT-BE-DK-FI-FR.md
+# Catalog entry: infrastructure/attribution-licenses.json → "AT-Statutory-PD"
+
 schema_version: '1.0'
 mcp_name: 'Austrian Law MCP'
 jurisdiction: 'AT'
@@ -12,9 +20,9 @@ sources:
     update_frequency: 'weekly'
     last_ingested: '2026-02-16'
     license_or_terms:
-      type: 'CC BY 4.0'
-      url: 'https://creativecommons.org/licenses/by/4.0/'
-      summary: 'Austrian government open data under Creative Commons Attribution 4.0'
+      type: 'AT-Statutory-PD'
+      url: 'https://www.ris.bka.gv.at/NormDokument.wxe?Abfrage=Bundesnormen&Gesetzesnummer=10001848&Paragraf=7'
+      summary: 'Austrian statutory public domain (UrhG §7(1) "Freie Werke"). Laws, ordinances, official decrees, public notices, and court decisions are excluded from copyright protection. Statute-level basis on the underlying text; RIS OGD portal additionally publishes structured data under CC BY 4.0 for the compilation.'
     coverage:
       scope: 'Austrian federal laws (cybersecurity and data protection scope)'
       limitations: 'Initial release covers key cybersecurity legislation only'
