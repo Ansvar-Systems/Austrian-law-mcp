@@ -216,7 +216,7 @@ All content is sourced from authoritative Austrian legal databases:
 | **Authority** | Bundeskanzleramt Österreich |
 | **Retrieval method** | RIS OGD API |
 | **Language** | German |
-| **License** | RIS data (public domain, Austria) |
+| **License** | `AT-Statutory-PD` — Austrian statutory public domain (UrhG §7(1) "Freie Werke") |
 | **Coverage** | 5,101 federal statutes |
 | **Last ingested** | 2026-02-25 |
 
@@ -370,8 +370,8 @@ Apache License 2.0. See [LICENSE](./LICENSE) for details.
 
 ### Data Licenses
 
-- **Statutes & Legislation:** Bundeskanzleramt Österreich (public domain, RIS OGD)
-- **EU Metadata:** EUR-Lex (EU public domain)
+- **Statutes & Legislation:** `AT-Statutory-PD` — Austrian statutory public domain. UrhG §7(1) "Freie Werke" excludes laws (`Gesetze`), ordinances (`Verordnungen`), official decrees (`amtliche Erlässe`), public notices (`Bekanntmachungen`), and court decisions (`Entscheidungen`) from copyright protection. Verified verbatim 2026-05-17 via RIS consolidated text — see [`docs/audits/2026-05-17-eu-copyright-statutory-works-batch-1a-AT-BE-DK-FI-FR.md`](https://github.com/Ansvar-Systems/Ansvar-Architecture-Documentation/blob/main/docs/audits/2026-05-17-eu-copyright-statutory-works-batch-1a-AT-BE-DK-FI-FR.md) in arch-docs. Catalog entry: `AT-Statutory-PD` in `infrastructure/attribution-licenses.json`.
+- **EU Metadata:** EUR-Lex (EU public domain, Decision 2011/833/EU)
 
 ---
 
